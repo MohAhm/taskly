@@ -5,7 +5,6 @@ import { theme } from "./them";
 export default function App() {
   return (
     <View style={styles.container}>
-      {/* <View style={[StyleSheet.absoluteFill, { backgroundColor: "pink" }]} /> */}
       <ShoppingListItem name="Coffee" />
       <ShoppingListItem name="Tea" isCompleted />
       <ShoppingListItem name="Sugar" isCompleted />
