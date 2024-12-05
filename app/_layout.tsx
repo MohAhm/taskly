@@ -14,18 +14,11 @@ export default function Layout() {
           ),
         }}
       />
-      {/* <Stack.Screen
-        name="counter"
-        options={{
-          title: "Counter",
-          presentation: "modal",
-          animation: "slide_from_bottom",
-        }}
-      /> */}
       <Tabs.Screen
         name="counter"
         options={{
           title: "Counter",
+          headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <Feather name="clock" size={size} color={color} />
           ),
