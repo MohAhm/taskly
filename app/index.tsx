@@ -1,5 +1,12 @@
 import { useEffect, useState } from "react";
-import { FlatList, StyleSheet, Text, TextInput, View } from "react-native";
+import {
+  FlatList,
+  LayoutAnimation,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import ShoppingListItem from "../components/ShoppingListItem";
 import { theme } from "../them";
 import { getFromStorage, saveToStorage } from "../utils/storage";
@@ -22,6 +29,7 @@ export default function App() {
       const data = await getFromStorage(storageKey);
       if (data) {
         setShoppingList(data);
+        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
       }
     };
 
@@ -41,6 +49,7 @@ export default function App() {
       setShoppingList(newShoppingList);
       saveToStorage(storageKey, newShoppingList);
       setValue("");
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     }
   };
 
@@ -48,6 +57,7 @@ export default function App() {
     const newShoppingList = shoppingList.filter((item) => item.id !== id);
     saveToStorage(storageKey, newShoppingList);
     setShoppingList(newShoppingList);
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
   };
 
   const handleToggleComplete = (id: string) => {
@@ -65,6 +75,7 @@ export default function App() {
     });
     saveToStorage(storageKey, newShoppingList);
     setShoppingList(newShoppingList);
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
   };
 
   return (
