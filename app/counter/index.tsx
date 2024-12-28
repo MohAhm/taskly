@@ -1,10 +1,30 @@
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import * as Device from "expo-device";
+import * as Notifications from "expo-notifications";
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { theme } from "../../them";
 import { registerForPushNotificationsAsync } from "../../utils/registerForPushNotificationsAsync";
 
 export default function CounterScreen() {
-  const handleRequestPermission = async () => {
-    await registerForPushNotificationsAsync();
+  const scheduleNotification = async () => {
+    const result = await registerForPushNotificationsAsync();
+    if (result === "granted") {
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: "I'm a notification from your app! 📨",
+        },
+        trigger: {
+          seconds: 2,
+          channelId: "default",
+        },
+      });
+    } else {
+      if (Device.isDevice) {
+        Alert.alert(
+          "Unable to schedule notification",
+          "Enable the notifications permission for Expo Go in settings"
+        );
+      }
+    }
   };
 
   return (
@@ -12,9 +32,9 @@ export default function CounterScreen() {
       <TouchableOpacity
         style={styles.button}
         activeOpacity={0.8}
-        onPress={handleRequestPermission}
+        onPress={scheduleNotification}
       >
-        <Text style={styles.buttonText}>Request permission</Text>
+        <Text style={styles.buttonText}>Schedule notification</Text>
       </TouchableOpacity>
     </View>
   );
@@ -25,7 +45,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#fff",
+    backgroundColor: theme.colorWhite,
   },
   button: {
     padding: 12,
