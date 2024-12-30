@@ -1,10 +1,44 @@
+import { Duration, intervalToDuration, isBefore } from "date-fns";
 import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
+import { useEffect, useState } from "react";
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { theme } from "../../them";
 import { registerForPushNotificationsAsync } from "../../utils/registerForPushNotificationsAsync";
 
+// 10 seconds from now
+const timeStamp = Date.now() + 10 * 1000;
+
+type CounterDownState = {
+  isOverdue: boolean;
+  distance: Duration;
+};
+
 export default function CounterScreen() {
+  const [state, setState] = useState<CounterDownState>({
+    isOverdue: false,
+    distance: {},
+  });
+  console.log("🚀 ~ state:", state);
+  const [secondsElapsed, setSecondsElapsed] = useState(0);
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      const isOverdue = isBefore(timeStamp, Date.now());
+      const distance = intervalToDuration(
+        isOverdue
+          ? { start: timeStamp, end: Date.now() }
+          : { start: Date.now(), end: timeStamp }
+      );
+      setState({ isOverdue, distance });
+      setSecondsElapsed((prev) => prev + 1);
+    }, 1000);
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, []);
+
   const scheduleNotification = async () => {
     const result = await registerForPushNotificationsAsync();
     if (result === "granted") {
@@ -29,6 +63,7 @@ export default function CounterScreen() {
 
   return (
     <View style={styles.container}>
+      <Text>{secondsElapsed}</Text>
       <TouchableOpacity
         style={styles.button}
         activeOpacity={0.8}
