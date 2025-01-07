@@ -6,48 +6,71 @@ import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { TimeSegment } from "../../components/TimeSegment";
 import { theme } from "../../them";
 import { registerForPushNotificationsAsync } from "../../utils/registerForPushNotificationsAsync";
+import { getFromStorage, saveToStorage } from "../../utils/storage";
 
 // 10 seconds from now
-const timeStamp = Date.now() + 10 * 1000;
+const frequency = 10 * 1000;
 
 type CounterDownStatus = {
   isOverdue: boolean;
   distance: Duration;
 };
 
+const countDownStorageKey = "taskly-countdown";
+
+type PersistedCountdownState = {
+  currentNotificationId?: string;
+  completedAtTimestamps: number[];
+};
+
 export default function CounterScreen() {
+  const [countdownState, setCountdownState] =
+    useState<PersistedCountdownState>();
   const [status, setStatus] = useState<CounterDownStatus>({
     isOverdue: false,
     distance: {},
   });
-  const [secondsElapsed, setSecondsElapsed] = useState(0);
+
+  const lastCompletedTimestamp = countdownState?.completedAtTimestamps[0];
+
+  useEffect(() => {
+    const init = async () => {
+      const value = await getFromStorage(countDownStorageKey);
+      setCountdownState(value);
+    };
+
+    init();
+  }, []);
 
   useEffect(() => {
     const intervalId = setInterval(() => {
-      const isOverdue = isBefore(timeStamp, Date.now());
+      const timestamp = lastCompletedTimestamp
+        ? lastCompletedTimestamp + frequency
+        : Date.now();
+      const isOverdue = isBefore(timestamp, Date.now());
       const distance = intervalToDuration(
         isOverdue
-          ? { start: timeStamp, end: Date.now() }
-          : { start: Date.now(), end: timeStamp }
+          ? { start: timestamp, end: Date.now() }
+          : { start: Date.now(), end: timestamp }
       );
       setStatus({ isOverdue, distance });
-      setSecondsElapsed((prev) => prev + 1);
     }, 1000);
 
     return () => {
       clearInterval(intervalId);
     };
-  }, []);
+  }, [lastCompletedTimestamp]);
 
   const scheduleNotification = async () => {
+    let pushNotificationId;
     const result = await registerForPushNotificationsAsync();
     if (result === "granted") {
-      await Notifications.scheduleNotificationAsync({
+      pushNotificationId = await Notifications.scheduleNotificationAsync({
         content: {
-          title: "I'm a notification from your app! 📨",
+          title: "The thing is due!",
         },
         trigger: {
-          seconds: 2,
+          seconds: frequency / 1000,
           channelId: "default",
         },
       });
@@ -59,6 +82,23 @@ export default function CounterScreen() {
         );
       }
     }
+
+    if (countdownState?.currentNotificationId) {
+      await Notifications.cancelScheduledNotificationAsync(
+        countdownState?.currentNotificationId
+      );
+    }
+
+    const newCountdownState: PersistedCountdownState = {
+      currentNotificationId: pushNotificationId,
+      completedAtTimestamps: countdownState
+        ? [Date.now(), ...countdownState.completedAtTimestamps]
+        : [Date.now()],
+    };
+
+    setCountdownState(newCountdownState);
+
+    await saveToStorage(countDownStorageKey, newCountdownState);
   };
 
   return (
