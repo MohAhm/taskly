@@ -23,9 +23,9 @@ type CounterDownStatus = {
   distance: Duration;
 };
 
-const countDownStorageKey = "taskly-countdown";
+export const countDownStorageKey = "taskly-countdown";
 
-type PersistedCountdownState = {
+export type PersistedCountdownState = {
   currentNotificationId?: string;
   completedAtTimestamps: number[];
 };
